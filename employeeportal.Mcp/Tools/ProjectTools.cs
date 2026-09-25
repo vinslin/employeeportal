@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using employeeportal.Entity.DTOs;
+using employeeportal.Mcp.Authorization;
 using employeeportal.Services.Interfaces;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
@@ -20,6 +21,7 @@ public class ProjectTools
 
     [McpServerTool(Name = "get_all_projects_with_employees")]
     [Description("Gets all projects and the employees assigned to each project.")]
+    [RequiredRoles("Employee", "Manager", "SuperAdmin")]
     public async Task<List<ProjectDto>> GetAllProjectsWithEmployees()
     {
         try
@@ -35,6 +37,7 @@ public class ProjectTools
 
     [McpServerTool(Name = "get_project_by_id")]
     [Description("Gets a project by ID including its assigned employees. Returns null if no project with that ID exists.")]
+    [RequiredRoles("Employee", "Manager", "SuperAdmin")]
     public async Task<ProjectDto?> GetProjectById(
         [Description("The unique numeric ID of the project")] int id)
     {
@@ -56,6 +59,7 @@ public class ProjectTools
 
     [McpServerTool(Name = "create_project")]
     [Description("Creates a new project.")]
+    [RequiredRoles("Manager", "SuperAdmin")]
     public async Task<ProjectDto> CreateProject(
         [Description("The name of the project. Maximum 200 characters.")] string name,
         [Description("The client the project is being built for. Maximum 200 characters.")] string client,
@@ -77,6 +81,7 @@ public class ProjectTools
 
     [McpServerTool(Name = "delete_project")]
     [Description("Deletes a project by ID without deleting the employees assigned to it. Returns whether a project was actually deleted.")]
+    [RequiredRoles("SuperAdmin")]
     public async Task<ProjectDeleteResult> DeleteProject(
         [Description("The unique numeric ID of the project to delete")] int id)
     {

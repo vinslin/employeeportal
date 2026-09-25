@@ -37,6 +37,11 @@ public class EmployeeService : IEmployeeService
         return MapToDto(created);
     }
 
+    public async Task<bool> DeleteAsync(int id)
+    {
+        return await _employeeRepository.DeleteAsync(id);
+    }
+
     private static EmployeeDto MapToDto(Employee employee)
     {
         return new EmployeeDto
