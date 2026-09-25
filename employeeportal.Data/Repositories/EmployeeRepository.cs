@@ -29,4 +29,23 @@ public class EmployeeRepository : IEmployeeRepository
         await _context.SaveChangesAsync();
         return employee;
     }
+
+    public async Task<bool> DeleteAsync(int id)
+    {
+        var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == id);
+        if (employee is null)
+        {
+            return false;
+        }
+
+        // EmployeeProject has no ON DELETE CASCADE on FK_EmployeeProject_Employee,
+        // so any project assignments must be removed first or SQL Server rejects
+        // the delete with a foreign key violation.
+        var links = _context.EmployeeProjects.Where(ep => ep.EmployeeId == id);
+        _context.EmployeeProjects.RemoveRange(links);
+        _context.Employees.Remove(employee);
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
 }

@@ -1,12 +1,11 @@
-using System.Text;
 using employeeportal.Data;
 using employeeportal.Data.Interfaces;
 using employeeportal.Data.Repositories;
 using employeeportal.Services.Interfaces;
+using employeeportal.Services.Security;
 using employeeportal.Services.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -59,33 +58,13 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 // Stateless/thread-safe — a single shared instance is fine.
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
-var jwtSection = builder.Configuration.GetSection("Jwt");
-var jwtSecretKey = jwtSection["SecretKey"]
-    ?? throw new InvalidOperationException(
-        "Jwt:SecretKey is not configured. Set it via appsettings.Development.json " +
-        "locally, or via environment variable/secret manager in other environments.");
-
+// Shared with employeeportal.Mcp via employeeportal.Services.Security —
+// one JWT validation implementation, used by both hosts.
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = jwtSection["Issuer"],
-
-            ValidateAudience = true,
-            ValidAudience = jwtSection["Audience"],
-
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromMinutes(1),
-
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey)),
-
-            NameClaimType = System.Security.Claims.ClaimTypes.Name,
-            RoleClaimType = System.Security.Claims.ClaimTypes.Role,
-        };
+        options.TokenValidationParameters = JwtValidationParametersFactory.Create(builder.Configuration);
     });
 
 builder.Services.AddAuthorization();
