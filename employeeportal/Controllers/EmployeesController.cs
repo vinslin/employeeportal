@@ -1,9 +1,13 @@
 using employeeportal.Entity.DTOs;
 using employeeportal.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace employeeportal.Controllers;
 
+// Employee, Manager, and SuperAdmin can all read employee data — that's
+// ordinary workplace-directory information, not an administrative operation.
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class EmployeesController : ControllerBase
@@ -34,6 +38,9 @@ public class EmployeesController : ControllerBase
         return Ok(employee);
     }
 
+    // Creating an employee record is workforce management, not something a
+    // regular Employee account should be able to do to itself or others.
+    [Authorize(Roles = "Manager,SuperAdmin")]
     [HttpPost]
     public async Task<ActionResult<EmployeeDto>> Create(CreateEmployeeDto dto)
     {
